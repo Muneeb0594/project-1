@@ -1,9 +1,11 @@
 from application import db, app, bcrypt 
 from application.models import BlogPosts, User
 from application.forms import LoginForm, RegisterForm
-from flask import render_template, redirect, url_for
+from flask import render_template, redirect, url_for, request
+from flask_login import login_user, logout_user, current_user
 
 @app.route('/')
+@app.route('/home')
 def index():
 	return render_template('index.html')
 
@@ -21,9 +23,6 @@ def posts():
 		all_posts = BlogPosts.query.order_by(BlogPosts.date_posted).all()
 		return render_template('posts.html', posts=all_posts)
 
-@app.route('/home/users/<string:name>/posts/<int:id>')
-def home(name, id):
-    return "Hello!!, " + name + ", your id is: " + str(id)
 
 @app.route('/onlyget', methods=['GET'])
 def get_req():
@@ -50,9 +49,18 @@ def edit(id):
 	else:
 		return render_template('edit.html', post=post)
 
-@app.route('/login')
+@app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user and bcrypt.check_password_hash(user.password, form.password.data):
+            login_user(user)
+            next_page = request.args.get('next')
+            if next_page:
+                return redirect(next_page)
+            return redirect(url_for('index'))
+
     return render_template('login.html', form=form)
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -66,4 +74,8 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html', form=form)
 
+@app.route('/logout')
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
 
