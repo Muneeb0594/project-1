@@ -1,6 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, PasswordField
 from wtforms.validators import DataRequired, Length, Email, EqualTo
+from application.models import User
 
 class LoginForm(FlaskForm):
         email = StringField('Email: ',validators = [DataRequired(), Email()])
@@ -22,5 +23,4 @@ class RegisterForm(FlaskForm):
         existing_users = User.query.filter_by(email=email.data).all()
         if existing_users:
             raise ValidationError('A user with that email is already registered.')
-        return render_template ('register.html')
 

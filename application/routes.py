@@ -1,7 +1,7 @@
-from application import db, app
-from application.models import BlogPosts
+from application import db, app, bcrypt 
+from application.models import BlogPosts, User
 from application.forms import LoginForm, RegisterForm
-from flask import render_template
+from flask import render_template, redirect, url_for
 
 @app.route('/')
 def index():
@@ -55,11 +55,15 @@ def login():
     form = LoginForm()
     return render_template('login.html', form=form)
 
-@app.route('/register')
+@app.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegisterForm()
     if form.validate_on_submit():
-        pass
+        password = bcrypt.generate_password_hash(form.password.data)
+        user = User(email=form.email.data, password=password)
+        db.session.add(user)
+        db.session.commit()
+        return redirect(url_for('login'))
     return render_template('register.html', form=form)
 
 
